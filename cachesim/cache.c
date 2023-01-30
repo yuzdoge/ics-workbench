@@ -23,7 +23,7 @@ static struct cache_line **cache;
 static int nway, nset; 
 static uint32_t index_width, tag_width;
 
-#define test_bit(stat, flag) ((stat) & (flag) != 0)
+#define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag))
 #define unset_stat(stat, flag) ((stat) & ~(flag))
 #define clear_stat(stat) ((stat) & 0)
@@ -55,7 +55,7 @@ uint32_t cache_read(uintptr_t addr) {
   uint32_t offset = get_offset(addr);
   //printf("%x:%x:%x\n", tag, index, offset);
 
-  if ((i = access(addr)) > 0) {
+  if ((i = access(tag, index)) > 0) {
     word = (void *)cache[i][index].data + (offset & ~(sizeof(*word) - 1));
   } else {
     replace(1);
