@@ -44,6 +44,7 @@ static bool access(uintptr_t addr) {
   int index =  get_index(addr);
   int offset = get_offset(addr);
   printf("%x:%x:%x\n", tag, index, offset);
+  return true;
 } 
 
 uint32_t cache_read(uintptr_t addr) {
