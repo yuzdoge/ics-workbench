@@ -16,7 +16,7 @@ struct cache_line {
   uint32_t status;
   uint32_t tag;
   uint8_t  data[BLOCK_SIZE];
-}
+};
 
 static struct cache_line **cache;
 static int nway, nset; 
