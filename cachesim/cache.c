@@ -1,5 +1,6 @@
 #include "common.h"
 #include <inttypes.h>
+#include <string.h> 
 
 void mem_read(uintptr_t block_num, uint8_t *buf);
 void mem_write(uintptr_t block_num, const uint8_t *buf);
@@ -55,7 +56,7 @@ void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
 
 void init_cache(int total_size_width, int associativity_width) {
   //int size = exp2(total_size_width);
-  index_width = total_size_width - BLOCK_WIDTH - associativity_width
+  index_width = total_size_width - BLOCK_WIDTH - associativity_width;
   tag_width = sizeof(uintptr_t) * 8 - index_width - BLOCK_WIDTH;
   nway = exp2(associativity_width);
   nset = exp2(index_width);
