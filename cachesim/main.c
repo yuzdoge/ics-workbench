@@ -130,8 +130,11 @@ int main(int argc, char *argv[]) {
   init_mem();
 
   init_cache(14, 2);
-
+  cache_read(0x12345678);
+  
+/*
   replay_trace();
+*/
 
   display_statistic();
 
