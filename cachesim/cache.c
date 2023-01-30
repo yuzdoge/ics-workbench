@@ -29,7 +29,7 @@ static uint32_t index_width, tag_width;
 
 #define get_tag(addr)   (((addr) >> (index_width + BLOCK_WIDTH)) & (exp2(tag_width) - 1)) 
 #define get_index(addr) (((addr) >> BLOCK_WIDTH) & (nset - 1))
-#define get_offet(addr) ((addr) & (BLOCK_SIZE - 1))
+#define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
 
 
 static uint32_t replace(int policy) {
