@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
   init_rand(seed);
   init_mem();
   uint32_t *word;
-  printf("%d\n", sizeof(*word) - 1);
+  printf("%ld\n", sizeof(*word) - 1);
   init_cache(14, 2);
   /*
   replay_trace();
