@@ -59,6 +59,7 @@ uint32_t cache_read(uintptr_t addr) {
     word = (void *)cache[i][index].data + (offset & ~(sizeof(*word) - 1));
   } else {
     replace(1);
+    *word = 0;
 
   }
   return *word;
