@@ -123,20 +123,18 @@ void replay_trace(void) {
   pclose(fp);
 }
 
-uint32_t cache_read(uintptr_t addr);
 
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);
 
   init_rand(seed);
   init_mem();
-
+  uint32_t *word;
+  printf("%d\n", sizeof(*word) - 1);
   init_cache(14, 2);
-  cache_read(0x12345678);
-  
-/*
+  /*
   replay_trace();
-*/
+  */
 
   display_statistic();
 

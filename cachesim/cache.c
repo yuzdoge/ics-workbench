@@ -23,6 +23,7 @@ static struct cache_line **cache;
 static int nway, nset; 
 static uint32_t index_width, tag_width;
 
+#define test_bit(stat, flag) ((stat) & (flag) != 0)
 #define set_stat(stat, flag) ((stat) | (flag))
 #define unset_stat(stat, flag) ((stat) & ~(flag))
 #define clear_stat(stat) ((stat) & 0)
@@ -33,23 +34,34 @@ static uint32_t index_width, tag_width;
 #define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
 
 
-/*
 static uint32_t replace(int policy) {
   return 0;
 }
-*/
 
-static bool access(uintptr_t addr) {
-  int tag = get_tag(addr); 
-  int index =  get_index(addr);
-  int offset = get_offset(addr);
-  printf("%x:%x:%x\n", tag, index, offset);
-  return true;
+static int access(uint32_t tag, uint32_t index) {
+  for (int i = 0; i < nway; i++)
+    if (cache[i][index].tag == tag && 
+        test_bit(cache[i][index].status, CACHELINE_V))
+      return i;
+
+  return -1;
 } 
 
 uint32_t cache_read(uintptr_t addr) {
-  access(addr); 
-  return 0;
+  int i;
+  uint32_t *word;
+  uint32_t tag = get_tag(addr); 
+  uint32_t index =  get_index(addr);
+  uint32_t offset = get_offset(addr);
+  //printf("%x:%x:%x\n", tag, index, offset);
+
+  if ((i = access(addr)) > 0) {
+    word = (void *)cache[i][index].data + (offset & ~(sizeof(*word) - 1));
+  } else {
+    replace(1);
+
+  }
+  return *word;
 }
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
@@ -63,7 +75,6 @@ void init_cache(int total_size_width, int associativity_width) {
   tag_width = sizeof(uintptr_t) * 8 - index_width - BLOCK_WIDTH;
   nway = exp2(associativity_width);
   nset = exp2(index_width);
-
 
   cache = malloc(nway * sizeof(struct cache_line*));
   assert(cache);
