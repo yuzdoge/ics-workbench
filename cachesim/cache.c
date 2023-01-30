@@ -33,9 +33,11 @@ static uint32_t index_width, tag_width;
 #define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
 
 
+/*
 static uint32_t replace(int policy) {
   return 0;
 }
+*/
 
 static bool access(uintptr_t addr) {
   int tag = get_tag(addr); 

@@ -123,6 +123,8 @@ void replay_trace(void) {
   pclose(fp);
 }
 
+uint32_t cache_read(uintptr_t addr);
+
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);
 
