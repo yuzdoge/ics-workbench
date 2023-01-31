@@ -111,7 +111,9 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
     if (way >= 0) {
       if (cache_obj.write_policy == WRITE_BACK) {
+        printf("Astatus:%d\n", cache[way][index].status);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
+        printf("Bstatus:%d\n", cache[way][index].status);
       }
 
     } else {
@@ -128,7 +130,6 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         cache[way][index].status = clear_stat(cache[way][index].status);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
-        printf("%d\n", cache[way][index].status);
         cache[way][index].tag = tag;
       }
 
@@ -150,7 +151,9 @@ uint32_t cache_read(uintptr_t addr) {
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
   uint32_t *word = cache_ctrl(1, addr);
+  printf("write---->%x:", *word);
   *word = (*word & ~wmask) | (data & wmask); 
+  printf("(%x:%x)->%x\n", data, wmask, *word);
 }
 
 /* addr = | tag | index | block offset| */
