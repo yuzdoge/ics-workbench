@@ -13,7 +13,7 @@ void cycle_increase(int n) { cycle_cnt += n; }
 
 #define pos(x) exp2(x)
 #define CACHELINE_V pos(0)
-#define CACHElINE_D pos(1)
+#define CACHELINE_D pos(1)
 
 struct cache_line {
   uint32_t status;
@@ -138,7 +138,7 @@ uint32_t cache_read(uintptr_t addr) {
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
   uint32_t *word = cache_ctrl(1, addr);
-  *p = (*p & ~wmask) | (data & wmask); 
+  *word = (*word & ~wmask) | (data & wmask); 
 }
 
 /* addr = | tag | index | block offset| */
@@ -167,7 +167,7 @@ void init_cache(int total_size_width, int associativity_width) {
 void display_statistic(void) {
 }
 
-void free_cache() {
+void free_cache(void) {
   assert(nway > 0);
   for (int i = 0; i < nway; i++)
     free(cache[i]);

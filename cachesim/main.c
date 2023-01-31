@@ -10,6 +10,7 @@ void cpu_uncache_write(uintptr_t addr, int len, uint32_t data);
 void init_mem(void);
 void init_cache(int total_size_width, int associativity_width);
 void display_statistic(void);
+void free_cache(void);
 
 static uint32_t seed;
 static char *tracefile;
