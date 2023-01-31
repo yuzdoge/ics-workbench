@@ -35,6 +35,8 @@ static uint32_t index_width, tag_width;
 #define get_index(addr) (((addr) >> BLOCK_WIDTH) & (nset - 1))
 #define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
 
+#define make_blocknum(tag, index) (((tag) << index_width) | index)
+
 // Replacement Policies
 #define REPLACE_RAND 0
 
@@ -70,12 +72,13 @@ static int access(uint32_t tag, uint32_t index) {
   return -1; // miss
 } 
 
-static void write_dirty(uintptr_t addr, uint32_t way, uint32_t index) {
-    if (test_bit(cache[way][index].status, CACHELINE_V) && 
-        test_bit(cache[way][index].status, CACHELINE_D)) {
-        mem_write((addr >> BLOCK_WIDTH), cache[way][index].data);
-        printf("write!!!\n");
-    }
+static void write_dirty(uint32_t way, uint32_t index) {
+  uintptr_t blocknum = make_blocknum(cache[way][index].tag, index);
+  if (test_bit(cache[way][index].status, CACHELINE_V) && 
+    test_bit(cache[way][index].status, CACHELINE_D)) {
+    mem_write(blocknum, cache[way][index].data);
+    printf("write!!!\n");
+  }
 }
 
 static uint32_t* cache_ctrl(int write, uintptr_t addr) {
@@ -97,7 +100,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
       way = replace_policy(cache_obj.replace_policy, index);
 
       if (cache_obj.write_policy == WRITE_BACK) {
-        write_dirty(addr, way, index);
+        write_dirty(way, index);
         printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
@@ -122,7 +125,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         way = replace_policy(cache_obj.replace_policy, index);
 
         if (cache_obj.write_policy == WRITE_BACK) {
-          write_dirty(addr, way, index);
+          write_dirty(way, index);
           printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n");
         }
 
