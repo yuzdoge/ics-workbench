@@ -105,7 +105,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       cache[way][index].status = clear_stat(cache[way][index].status);
       cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
-      cache[way[index].tag = tag;
+      cache[way][index].tag = tag;
     }
   } else {
     /*
