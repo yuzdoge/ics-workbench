@@ -129,6 +129,8 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
   word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
 
+  return word;
+
 }
 
 uint32_t cache_read(uintptr_t addr) {
