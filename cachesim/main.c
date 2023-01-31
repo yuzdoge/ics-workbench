@@ -39,6 +39,7 @@ static void trace_exec(struct trace *t, bool is_check) {
     if (is_check) {
       cpu_uncache_write(t->t.addr, t->t.len, t->data);
     }
+    write("-----------------:ww\n");
   }
   else {
     uint32_t ret = cpu_read(t->t.addr, t->t.len);
