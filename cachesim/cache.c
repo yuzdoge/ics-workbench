@@ -110,6 +110,9 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   } else {
 
     if (way >= 0) {
+      if (cache_obj.write_policy == WRITE_BACK) {
+        cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
+      }
 
     } else {
 
@@ -124,15 +127,13 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
         cache[way][index].status = clear_stat(cache[way][index].status);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
+        cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
         cache[way][index].tag = tag;
       }
 
     }
 
-    if (cache_obj.write_policy == WRITE_BACK) {
-      cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
-    }
-
+    
   }
 
   word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
