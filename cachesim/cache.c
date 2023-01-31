@@ -12,8 +12,8 @@ void cycle_increase(int n) { cycle_cnt += n; }
 // TODO: implement the following functions
 
 #define pos(x) exp2(x)
-#define CACHELINE_V pos(0)
-#define CACHELINE_D pos(1)
+#define CACHELINE_V 0x1 
+#define CACHELINE_D 0x2 
 
 struct cache_line {
   uint32_t status;
@@ -26,9 +26,9 @@ static int nway, nset;
 static uint32_t index_width, tag_width;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
-#define set_stat(stat, flag) (stat=(stat) | (flag))
-#define unset_stat(stat, flag) (stat=(stat) & ~(flag))
-#define clear_stat(stat) (stat=(stat) & 0)
+#define set_stat(stat, flag) { stat = ((stat) | (flag)) }
+#define unset_stat(stat, flag) { stat = ((stat) & ~(flag)) }
+#define clear_stat(stat) { stat = 0 }
 
 
 #define get_tag(addr)   (((addr) >> (index_width + BLOCK_WIDTH)) & (exp2(tag_width) - 1)) 
