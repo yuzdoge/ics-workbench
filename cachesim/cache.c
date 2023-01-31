@@ -26,9 +26,9 @@ static int nway, nset;
 static uint32_t index_width, tag_width;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
-#define set_stat(stat, flag) { stat = ((stat) | (flag)) }
-#define unset_stat(stat, flag) { stat = ((stat) & ~(flag)) }
-#define clear_stat(stat) { stat = 0 }
+#define set_stat(stat, flag) ((stat) | (flag)) 
+#define unset_stat(stat, flag) ((stat) & ~(flag))
+#define clear_stat(stat) 0
 
 
 #define get_tag(addr)   (((addr) >> (index_width + BLOCK_WIDTH)) & (exp2(tag_width) - 1)) 
@@ -103,8 +103,8 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
 
-      clear_stat(cache[way][index].status);
-      set_stat(cache[way][index].status, CACHELINE_V);
+      cache[way][index].status = clear_stat(cache[way][index].status);
+      cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
     }
   } else {
 
@@ -121,14 +121,14 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         }
 
         mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
-        clear_stat(cache[way][index].status);
-        set_stat(cache[way][index].status, CACHELINE_V);
+        cache[way][index].status = clear_stat(cache[way][index].status);
+        cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
       }
 
     }
 
     if (cache_obj.write_policy == WRITE_BACK) {
-      set_stat(cache[way][index].status, CACHELINE_D);
+      cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
     }
 
   }
