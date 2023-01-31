@@ -11,7 +11,7 @@ void cycle_increase(int n) { cycle_cnt += n; }
 
 // TODO: implement the following functions
 
-#define pos(x) exp(x)
+#define pos(x) exp2(x)
 #define CACHELINE_V pos(0)
 #define CACHElINE_D pos(1)
 
