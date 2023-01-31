@@ -44,7 +44,7 @@ static void trace_exec(struct trace *t, bool is_check) {
     uint32_t ret = cpu_read(t->t.addr, t->t.len);
     if (is_check) {
       uint32_t ret_uncache = cpu_uncache_read(t->t.addr, t->t.len);
-      printf("%x: %x\n", ret, ret_uncache);
+      //printf("%x: %x\n", ret, ret_uncache);
       assert(ret == ret_uncache);
     }
   }
@@ -58,7 +58,7 @@ static void random_trace(void) {
   for (i = 0; i < 100000; i ++) {
     t.t.len = choose_len[ choose(sizeof(choose_len) / sizeof(choose_len[0])) ] ;
     t.t.addr = choose(MEM_SIZE) & ~(t.t.len - 1);
-    t.t.is_write = choose(1);
+    t.t.is_write = choose(2);
     if (t.t.is_write) t.data = rand();
 
     trace_exec(&t, true);
