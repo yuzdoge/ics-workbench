@@ -92,6 +92,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
   if (!write) {
     if (way >= 0) {
+      printf("hit\n");
 
     } else {
       way = replace_policy(cache_obj.replace_policy, index);
