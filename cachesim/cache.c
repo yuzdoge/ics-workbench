@@ -72,8 +72,10 @@ static int access(uint32_t tag, uint32_t index) {
 
 static void write_dirty(uintptr_t addr, uint32_t way, uint32_t index) {
     if (test_bit(cache[way][index].status, CACHELINE_V) && 
-        test_bit(cache[way][index].status, CACHELINE_D))
+        test_bit(cache[way][index].status, CACHELINE_D)) {
         mem_write((addr >> BLOCK_WIDTH), cache[way][index].data);
+        printf("write!!!\n");
+    }
 }
 
 static uint32_t* cache_ctrl(int write, uintptr_t addr) {
