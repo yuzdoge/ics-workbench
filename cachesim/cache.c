@@ -77,7 +77,7 @@ static void write_dirty(uint32_t way, uint32_t index) {
   if (test_bit(cache[way][index].status, CACHELINE_V) && 
     test_bit(cache[way][index].status, CACHELINE_D)) {
     mem_write(blocknum, cache[way][index].data);
-    printf("write!!!\n");
+    //printf("write!!!\n");
   }
 }
 
@@ -101,7 +101,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       if (cache_obj.write_policy == WRITE_BACK) {
         write_dirty(way, index);
-        printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
+        //printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
       mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
@@ -114,10 +114,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
     if (way >= 0) {
       if (cache_obj.write_policy == WRITE_BACK) {
-        printf("Astatus:%d\n", cache[way][index].status);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
-        printf("Bstatus:%d\n", cache[way][index].status);
-      }
 
     } else {
 
@@ -126,7 +123,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
         if (cache_obj.write_policy == WRITE_BACK) {
           write_dirty(way, index);
-          printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n");
+          //printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n");
         }
 
         mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
@@ -154,9 +151,7 @@ uint32_t cache_read(uintptr_t addr) {
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
   uint32_t *word = cache_ctrl(1, addr);
-  printf("write---->%x:", *word);
   *word = (*word & ~wmask) | (data & wmask); 
-  printf("(%x:%x)->%x\n", data, wmask, *word);
 }
 
 /* addr = | tag | index | block offset| */
