@@ -98,13 +98,13 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       if (cache_obj.write_policy == WRITE_BACK) {
         write_dirty(addr, way, index);
-        //printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
+        printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
       mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
 
-      //cache[way][index].status = clear_stat(cache[way][index].status);
-      //cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
+      cache[way][index].status = clear_stat(cache[way][index].status);
+      cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
     }
   } else {
 
