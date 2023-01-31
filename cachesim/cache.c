@@ -96,7 +96,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       if (cache_obj.write_policy == WRITE_BACK) {
         write_dirty(addr, way, index);
-        printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n")
+        printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
       mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
@@ -115,7 +115,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
         if (cache_obj.write_policy == WRITE_BACK) {
           write_dirty(addr, way, index);
-          printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n")
+          printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n");
         }
 
         mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
