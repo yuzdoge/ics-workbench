@@ -114,7 +114,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         if (cache_obj.write_policy == WRITE_BACK)
           write_dirty(addr, way, index);
 
-        mem_read(addr >> BLOCK_WIDTH), cache[way][index].data;
+        mem_read(addr >> BLOCK_WIDTH), cache[way][index].data);
         clear_stat(cache[way][index].status);
         set_stat(cache[way][index].status, CACHELINE_V);
       }
