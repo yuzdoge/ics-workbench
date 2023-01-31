@@ -26,9 +26,9 @@ static int nway, nset;
 static uint32_t index_width, tag_width;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
-#define set_stat(stat, flag) ((stat) | (flag))
-#define unset_stat(stat, flag) ((stat) & ~(flag))
-#define clear_stat(stat) ((stat) & 0)
+#define set_stat(stat, flag) (stat=(stat) | (flag))
+#define unset_stat(stat, flag) (stat=(stat) & ~(flag))
+#define clear_stat(stat) (stat=(stat) & 0)
 
 
 #define get_tag(addr)   (((addr) >> (index_width + BLOCK_WIDTH)) & (exp2(tag_width) - 1)) 
