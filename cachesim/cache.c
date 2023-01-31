@@ -11,7 +11,9 @@ void cycle_increase(int n) { cycle_cnt += n; }
 
 // TODO: implement the following functions
 
-#define CACHELINE_V 0x1
+#define pos(x) exp(x)
+#define CACHELINE_V pos(0)
+#define CACHElINE_D pos(1)
 
 struct cache_line {
   uint32_t status;
@@ -33,44 +35,120 @@ static uint32_t index_width, tag_width;
 #define get_index(addr) (((addr) >> BLOCK_WIDTH) & (nset - 1))
 #define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
 
+// Replacement Policies
+#define REPLACE_RAND 0
 
-static uint32_t replace(int policy) {
-  return 0;
+// Write Policies
+#define WRITE_THROUGH 0
+#define WRITE_BACK    1
+
+// Write miss Policies
+#define NWRITE_ALLOCATE 0
+#define WRITE_ALLOCATE  1
+
+static struct {
+  int replace_policy; 
+  int write_policy; 
+  int wmiss_policy;
+} cache_obj;
+
+
+static uint32_t replace_policy(int policy, uint32_t index) {
+  int i;
+  switch (policy) {
+    default: i = rand() % nway;
+  }
+  return i;
 }
 
 static int access(uint32_t tag, uint32_t index) {
   for (int i = 0; i < nway; i++)
     if (cache[i][index].tag == tag && 
         test_bit(cache[i][index].status, CACHELINE_V))
-      return i;
+      return i; // hit
 
-  return -1;
+  return -1; // miss
 } 
 
-uint32_t cache_read(uintptr_t addr) {
-  int i;
+static void write_dirty(uintptr_t addr, uint32_t way, uint32_t index) {
+    if (test_bit(cache[way][index].status, CACHELINE_V) && 
+        test_bit(cache[way][index].status, CACHELINE_D))
+        mem_write((addr >> BLOCK_WIDTH), cache[way][index].data);
+}
+
+static uint32_t* cache_ctrl(int write, uintptr_t addr) {
+
+  assert(addr < MEM_SIZE);
+
+  int way; 
   uint32_t *word;
   uint32_t tag = get_tag(addr); 
   uint32_t index =  get_index(addr);
   uint32_t offset = get_offset(addr);
-  //printf("%x:%x:%x\n", tag, index, offset);
 
-  if ((i = access(tag, index)) > 0) {
-    word = (void *)cache[i][index].data + (offset & ~(sizeof(*word) - 1));
+  way = access(tag, index);
+
+  if (!write) {
+    if (way >= 0) {
+
+    } else {
+      way = replace_policy(cache_obj.replace_policy, index);
+
+      if (cache_obj.write_policy == WRITE_BACK)
+        write_dirty(addr, way, index);
+
+      mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
+
+      clear_stat(cache[way][index].status);
+      set_stat(cache[way][index].status, CACHELINE_V);
+    }
   } else {
-    replace(1);
-    word = (void *)cache[i][index].data + (offset & ~(sizeof(*word) - 1));
+
+    if (way >= 0) {
+
+    } else {
+
+      if (cache_obj.wmiss_policy == WRITE_ALLOCATE) {
+        way = replace_policy(cache_obj.replace_policy, index);
+
+        if (cache_obj.write_policy == WRITE_BACK)
+          write_dirty(addr, way, index);
+
+        mem_read(addr >> BLOCK_WIDTH), cache[way][index].data;
+        clear_stat(cache[way][index].status);
+        set_stat(cache[way][index].status, CACHELINE_V);
+      }
+
+    }
+
+    if (cache_obj.write_policy == WRITE_BACK) {
+      set_stat(cache[way][index].status, CACHELINE_D);
+    }
 
   }
+
+  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+
+}
+
+uint32_t cache_read(uintptr_t addr) {
+  uint32_t *word = cache_ctrl(0, addr);
   return *word;
 }
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
+  uint32_t *word = cache_ctrl(1, addr);
+  *p = (*p & ~wmask) | (data & wmask); 
 }
 
 /* addr = | tag | index | block offset| */
 
 void init_cache(int total_size_width, int associativity_width) {
+
+  cache_obj.replace_policy = REPLACE_RAND;
+  cache_obj.write_policy = WRITE_BACK;
+  cache_obj.wmiss_policy = WRITE_ALLOCATE;
+
   //int size = exp2(total_size_width);
   index_width = total_size_width - BLOCK_WIDTH - associativity_width;
   tag_width = sizeof(uintptr_t) * 8 - index_width - BLOCK_WIDTH;
