@@ -115,7 +115,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
     if (way >= 0) {
       if (cache_obj.write_policy == WRITE_BACK) {
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
-
+      }
     } else {
 
       if (cache_obj.wmiss_policy == WRITE_ALLOCATE) {
@@ -135,7 +135,6 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
     }
 
-    
   }
 
   word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
