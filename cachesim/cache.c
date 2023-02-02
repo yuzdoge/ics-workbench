@@ -1,6 +1,8 @@
 #include "common.h"
 #include <inttypes.h>
 #include <string.h> 
+#include "trace.h"
+#include "stat.h"
 
 void mem_read(uintptr_t block_num, uint8_t *buf);
 void mem_write(uintptr_t block_num, const uint8_t *buf);
@@ -23,7 +25,8 @@ struct cache_line {
 
 static struct cache_line **cache;
 static int nway, nset; 
-static uint32_t index_width, tag_width;
+static int index_width, tag_width;
+static uint32_t hit, miss;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag)) 
@@ -66,9 +69,12 @@ static uint32_t replace_policy(int policy, uint32_t index) {
 static int access(uint32_t tag, uint32_t index) {
   for (int i = 0; i < nway; i++)
     if (cache[i][index].tag == tag && 
-        test_bit(cache[i][index].status, CACHELINE_V))
-      return i; // hit
-
+        test_bit(cache[i][index].status, CACHELINE_V)) {
+        hit++;
+        return i; // hit
+    }
+    
+  miss++;
   return -1; // miss
 } 
 
@@ -163,7 +169,11 @@ void init_cache(int total_size_width, int associativity_width) {
 
   //int size = exp2(total_size_width);
   index_width = total_size_width - BLOCK_WIDTH - associativity_width;
+  assert(index_width >= 0);
+
   tag_width = sizeof(uintptr_t) * 8 - index_width - BLOCK_WIDTH;
+  assert(tag_width >= 0);
+
   nway = exp2(associativity_width);
   nset = exp2(index_width);
 
@@ -177,10 +187,21 @@ void init_cache(int total_size_width, int associativity_width) {
 }
 
 void display_statistic(void) {
+  uint32_t tot_access = hit + miss;
+  // hit div tot_access = 0 . h1 h2 h3 
+  uint32_t tmp = 1000 * hit / tot_access;
+  uint32_t h1 = tmp / 100; tmp %= 100;
+  uint32_t h2 = tmp / 10;  tmp %= 10; 
+  uint32_t h3 = tmp;
+  LOG("Cache Configure:\n");
+  LOG("\n");
+  LOG("Total Memory Access: %d\n", tot_access);
+  LOG("Hit:Miss    %d : %d\n", hit, miss);
+  LOG("Hit Rate: %d%d.%d%\n", h1, h2, h3);
 }
 
 void free_cache(void) {
-  assert(nway > 0);
+  assert(nway > 0); // prevent free_cache() from being invoked before init_cache()
   for (int i = 0; i < nway; i++)
     free(cache[i]);
   free(cache);
