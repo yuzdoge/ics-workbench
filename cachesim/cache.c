@@ -51,6 +51,20 @@ static uint64_t hit, miss;
 #define NWRITE_ALLOCATE 0
 #define WRITE_ALLOCATE  1
 
+static const char* replace_policy_name[] = {
+[REPLACE_RAND] "Random",
+};
+
+static const char* write_policy[] = {
+[WRITE_THROUGH] "Write Through",
+[WRITE_BACK]    "Write Back",
+};
+
+static const char* wmiss_policy[] = {
+[NWRITE_ALLOCATE] "Non Write Allocate",
+[WRITE_ALLOCATE]  "Write Allocate",
+};
+
 static struct {
   int replace_policy; 
   int write_policy; 
@@ -185,22 +199,29 @@ void init_cache(int total_size_width, int associativity_width) {
   }
 }
 
+
 void display_statistic(void) {
   uint64_t tot_access = hit + miss;
-  /* hit div tot_access = 0 . h1 h2 h3 h4
+  double hit_rate = (double)hit / tot_access;
+  LOG("Cache Configure:\n");
+  LOG("Policies:\n");
+  LOG("\tReplacement Policy: %s\n", replace_policy_name[cache_obj.replace_policy]);
+  LOG("\tWrite Policy: %s\n", write_policy_name[cache_obj.write_policy]);
+  LOG("\tWrite Miss Policy: %s\n", wmiss_policy_name[cache_obj.wmiss_policy]);
+  LOG("\n");
+  LOG("Statistic:\n");
+  LOG("Total Memory Access: %ld\n", tot_access);
+  LOG("Hit / Miss    %ld / %ld\n", hit, miss);
+  LOG("Hit Rate: %0.4lf%%\n", 100 * hit_rate);
+  LOG("\n");
+/* hit div tot_access = 0 . h1 h2 h3 h4
   uint64_t tmp = 10000 * hit / tot_access;
   uint64_t h1 = tmp / 1000; tmp %= 1000;
   uint64_t h2 = tmp / 100;  tmp %= 100; 
   uint64_t h3 = tmp / 10;   tmp %= 10;
   uint64_t h4 = tmp;
-  */
-  double aa = (double)hit / tot_access;
-  LOG("Cache Configure:\n");
-  LOG("\n");
-  LOG("Total Memory Access: %ld\n", tot_access);
-  LOG("Hit / Miss    %ld / %ld\n", hit, miss);
-  //LOG("Hit Rate: %ld%ld.%ld%ld%%    %lf\n", h1, h2, h3, h4, 100 * aa);
-  LOG("Hit Rate: %0.4lf%%\n", 100 * aa);
+  LOG("Hit Rate: %ld%ld.%ld%ld%%    %lf\n", h1, h2, h3, h4, 100 * aa);
+*/
 }
 
 void free_cache(void) {
