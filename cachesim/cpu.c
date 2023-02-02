@@ -9,7 +9,7 @@ void mem_uncache_write(uintptr_t addr, uint32_t data, uint32_t wmask);
 
 const uint32_t len2datamask [] = { 0x0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
-extern tot;
+extern uint32_t tot;
 
 uint32_t cpu_read(uintptr_t addr, int len) {
   cycle_increase(1);
