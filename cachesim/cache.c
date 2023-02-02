@@ -26,6 +26,7 @@ struct cache_line {
 static struct cache_line **cache;
 static int nway, nset; 
 static int index_width, tag_width;
+static int cache_size;
 static uint64_t hit, miss;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
@@ -55,12 +56,12 @@ static const char* replace_policy_name[] = {
 [REPLACE_RAND] "Random",
 };
 
-static const char* write_policy[] = {
+static const char* write_policy_name[] = {
 [WRITE_THROUGH] "Write Through",
 [WRITE_BACK]    "Write Back",
 };
 
-static const char* wmiss_policy[] = {
+static const char* wmiss_policy_name[] = {
 [NWRITE_ALLOCATE] "Non Write Allocate",
 [WRITE_ALLOCATE]  "Write Allocate",
 };
@@ -180,7 +181,7 @@ void init_cache(int total_size_width, int associativity_width) {
   cache_obj.write_policy = WRITE_BACK;
   cache_obj.wmiss_policy = WRITE_ALLOCATE;
 
-  //int size = exp2(total_size_width);
+  cache_size = exp2(total_size_width);
   index_width = total_size_width - BLOCK_WIDTH - associativity_width;
   assert(index_width >= 0);
 
@@ -208,6 +209,9 @@ void display_statistic(void) {
   LOG("\tReplacement Policy: %s\n", replace_policy_name[cache_obj.replace_policy]);
   LOG("\tWrite Policy: %s\n", write_policy_name[cache_obj.write_policy]);
   LOG("\tWrite Miss Policy: %s\n", wmiss_policy_name[cache_obj.wmiss_policy]);
+  LOG("Cache Size: %d Byte\n", cache_size);
+  LOG("Block Size: %d Byte\n", BLOCK_SIZE);
+  LOG("Associativity: %d Way\n", nway);
   LOG("\n");
   LOG("Statistic:\n");
   LOG("Total Memory Access: %ld\n", tot_access);
