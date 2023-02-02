@@ -194,7 +194,7 @@ void display_statistic(void) {
   uint32_t h3 = tmp;
   LOG("Cache Configure:\n");
   LOG("\n");
-  LOG("Total Memory Access: %d:%d\n", tot, tot_access);
+  LOG("Total Memory Access: %d\n", tot_access);
   LOG("Hit:Miss    %d : %d\n", hit, miss);
   LOG("Hit Rate: %d%d.%d%%\n", h1, h2, h3);
 }
