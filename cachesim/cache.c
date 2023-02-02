@@ -193,7 +193,7 @@ void display_statistic(void) {
   uint32_t h2 = tmp / 100;  tmp %= 100; 
   uint32_t h3 = tmp / 10;   tmp %= 10;
   uint32_t h4 = tmp;
-  double aa = hit / tot_access;
+  double aa = (double)hit / tot_access;
   LOG("Cache Configure:\n");
   LOG("\n");
   LOG("Total Memory Access: %d\n", tot_access);
