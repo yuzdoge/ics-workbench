@@ -198,7 +198,7 @@ void display_statistic(void) {
   LOG("\n");
   LOG("Total Memory Access: %d\n", tot_access);
   LOG("Hit / Miss    %d / %d\n", hit, miss);
-  LOG("Hit Rate: %d%d.%d%d%%    %f\n", h1, h2, h3, h4, 100 * aa);
+  LOG("Hit Rate: %d%d.%d%d%%    %lf\n", h1, h2, h3, h4, aa);
 }
 
 void free_cache(void) {
