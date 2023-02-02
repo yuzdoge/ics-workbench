@@ -9,13 +9,17 @@ void mem_uncache_write(uintptr_t addr, uint32_t data, uint32_t wmask);
 
 const uint32_t len2datamask [] = { 0x0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
+extern tot;
+
 uint32_t cpu_read(uintptr_t addr, int len) {
   cycle_increase(1);
+  tot++;
   return (cache_read(addr) >> addr_offset_bit(addr)) & len2datamask[len];
 }
 
 void cpu_write(uintptr_t addr, int len, uint32_t data) {
   cycle_increase(1);
+  tot++;
   cache_write(addr, data << addr_offset_bit(addr), len2datamask[len] << addr_offset_bit(addr));
 }
 

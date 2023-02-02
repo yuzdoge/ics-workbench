@@ -97,7 +97,6 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   uint32_t offset = get_offset(addr);
 
   way = access(tag, index);
-  tot++;
 
   if (!write) {
     if (way >= 0) {
