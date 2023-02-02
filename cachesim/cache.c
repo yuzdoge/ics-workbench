@@ -196,8 +196,8 @@ void display_statistic(void) {
   double aa = (double)hit / tot_access;
   LOG("Cache Configure:\n");
   LOG("\n");
-  LOG("Total Memory Access: %d\n", tot_access);
-  LOG("Hit / Miss    %d / %d\n", hit, miss);
+  LOG("Total Memory Access: %ld\n", tot_access);
+  LOG("Hit / Miss    %ld / %ld\n", hit, miss);
   LOG("Hit Rate: %ld%ld.%ld%ld%%    %lf\n", h1, h2, h3, h4, aa);
 }
 
