@@ -187,18 +187,20 @@ void init_cache(int total_size_width, int associativity_width) {
 
 void display_statistic(void) {
   uint64_t tot_access = hit + miss;
-  // hit div tot_access = 0 . h1 h2 h3 h4
+  /* hit div tot_access = 0 . h1 h2 h3 h4
   uint64_t tmp = 10000 * hit / tot_access;
   uint64_t h1 = tmp / 1000; tmp %= 1000;
   uint64_t h2 = tmp / 100;  tmp %= 100; 
   uint64_t h3 = tmp / 10;   tmp %= 10;
   uint64_t h4 = tmp;
+  */
   double aa = (double)hit / tot_access;
   LOG("Cache Configure:\n");
   LOG("\n");
   LOG("Total Memory Access: %ld\n", tot_access);
   LOG("Hit / Miss    %ld / %ld\n", hit, miss);
-  LOG("Hit Rate: %ld%ld.%ld%ld%%    %lf\n", h1, h2, h3, h4, aa);
+  //LOG("Hit Rate: %ld%ld.%ld%ld%%    %lf\n", h1, h2, h3, h4, 100 * aa);
+  LOG("Hit Rate: %0.4lf%%\n", 100 * aa);
 }
 
 void free_cache(void) {
