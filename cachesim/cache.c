@@ -216,7 +216,7 @@ void display_statistic(void) {
   LOG("\n");
   LOG("Statistic:\n");
   LOG("Total Memory Access: %ld\n", tot_access);
-  LOG("Hit / Miss    %ld / %ld\n", hit, miss);
+  LOG("Hit / Miss: %ld / %ld\n", hit, miss);
   LOG("Hit Rate: %0.4lf%%\n", 100 * hit_rate);
   LOG("\n");
 /* hit div tot_access = 0 . h1 h2 h3 h4
