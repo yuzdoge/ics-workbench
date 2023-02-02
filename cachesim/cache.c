@@ -204,14 +204,15 @@ void init_cache(int total_size_width, int associativity_width) {
 void display_statistic(void) {
   uint64_t tot_access = hit + miss;
   double hit_rate = (double)hit / tot_access;
-  LOG("Cache Configure:\n");
+  LOG("Cache Configuration:\n");
   LOG("Policies:\n");
   LOG("\tReplacement Policy: %s\n", replace_policy_name[cache_obj.replace_policy]);
   LOG("\tWrite Policy: %s\n", write_policy_name[cache_obj.write_policy]);
   LOG("\tWrite Miss Policy: %s\n", wmiss_policy_name[cache_obj.wmiss_policy]);
-  LOG("Cache Size: %d Byte\n", cache_size);
-  LOG("Block Size: %d Byte\n", BLOCK_SIZE);
-  LOG("Associativity: %d Way\n", nway);
+  LOG("Cache Size: %d\n", cache_size);
+  LOG("Block Size: %d\n", BLOCK_SIZE);
+  LOG("Set Number: %d\n", nset);
+  LOG("Associativity: %d\n", nway);
   LOG("\n");
   LOG("Statistic:\n");
   LOG("Total Memory Access: %ld\n", tot_access);
