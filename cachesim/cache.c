@@ -26,7 +26,7 @@ struct cache_line {
 static struct cache_line **cache;
 static int nway, nset; 
 static int index_width, tag_width;
-static uint32_t hit, miss;
+static uint32_t hit, miss, tot;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag)) 
@@ -73,7 +73,6 @@ static int access(uint32_t tag, uint32_t index) {
         hit++;
         return i; // hit
     }
-    
   miss++;
   return -1; // miss
 } 
@@ -98,6 +97,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   uint32_t offset = get_offset(addr);
 
   way = access(tag, index);
+  tot++;
 
   if (!write) {
     if (way >= 0) {
@@ -195,7 +195,7 @@ void display_statistic(void) {
   uint32_t h3 = tmp;
   LOG("Cache Configure:\n");
   LOG("\n");
-  LOG("Total Memory Access: %d\n", tot_access);
+  LOG("Total Memory Access: %d:%d\n", tot, tot_access);
   LOG("Hit:Miss    %d : %d\n", hit, miss);
   LOG("Hit Rate: %d%d.%d%%\n", h1, h2, h3);
 }
