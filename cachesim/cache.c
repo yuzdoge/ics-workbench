@@ -26,7 +26,8 @@ struct cache_line {
 static struct cache_line **cache;
 static int nway, nset; 
 static int index_width, tag_width;
-static uint32_t hit, miss, tot;
+static uint32_t hit, miss
+uint32_t tot;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag)) 
