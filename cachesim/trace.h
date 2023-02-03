@@ -7,8 +7,8 @@
 "WAY=[%d], OLD LINE:[STAT:%x | BASE:%x | OFF:%x]=[%x] -> " \
 "NEW LINE:[STAT:%x | BASE:%x | OFF:%x]=[%x]"
 
-#define MTRACE_WDIRTY_FMT "Write to Memory Address: %lx"
+#define MTRACE_WDIRTY_FMT "Write to Memory Address: %08lx"
 
-#define MTRACE_WDIRTY(blknum) LOG(MTRACE_WDIRTY_FMT"\n", blknum);
+#define MTRACE_WDIRTY(blknum) LOG("\t"MTRACE_WDIRTY_FMT"\n", blknum);
 
 #endif
