@@ -24,10 +24,6 @@ struct cache_line {
 };
 
 static struct cache_line **cache;
-static int nway, nset; 
-static int index_width, tag_width;
-static int cache_size;
-static uint64_t hit, miss;
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag)) 
@@ -35,11 +31,11 @@ static uint64_t hit, miss;
 #define clear_stat(stat) 0
 
 
-#define get_tag(addr)   (((addr) >> (index_width + BLOCK_WIDTH)) & (exp2(tag_width) - 1)) 
-#define get_index(addr) (((addr) >> BLOCK_WIDTH) & (nset - 1))
-#define get_offset(addr) ((addr) & (BLOCK_SIZE - 1))
+#define get_tag(addr)   (((addr) >> (cache_obj.index_width + cache_obj.block_width)) & (exp2(cache_obj.tag_width) - 1)) 
+#define get_index(addr) (((addr) >> cache_obj.block_width) & (cache_obj.nset - 1))
+#define get_offset(addr) ((addr) & (cache_obj.block_size - 1))
 
-#define make_blocknum(tag, index) (((tag) << index_width) | index)
+#define make_blocknum(tag, index) (((tag) << cache_obj.index_width) | index)
 
 // Replacement Policies
 #define REPLACE_RAND 0
@@ -52,43 +48,67 @@ static uint64_t hit, miss;
 #define NWRITE_ALLOCATE 0
 #define WRITE_ALLOCATE  1
 
-static const char* replace_policy_name[] = {
-[REPLACE_RAND] "Random",
+struct policy{
+  char *name;
+  union {
+    uint32_t *replace(uint32_t index);
+    uint32_t *write();
+    uint32_t *wmiss();
+  }
+}; 
+
+static uint32_t replace_rand(uint32_t index) {
+  return (rand() % nway);
+}
+
+static uint32_t write_back() {
+  return 0;
+}
+
+static uint32_t write_alloc() {
+  return 0;
+}
+
+static struct policy replace_policy[] = {
+[REPLACE_RAND] {.name = "Random", .replace = replace_rand},
 };
 
-static const char* write_policy_name[] = {
-[WRITE_THROUGH] "Write Through",
-[WRITE_BACK]    "Write Back",
+static const char* write_policy[] = {
+//[WRITE_THROUGH] {.name = "Write Through", .write = write_through}, 
+[WRITE_BACK]    {.name = "Write Back",    .write = write_back   },
 };
 
-static const char* wmiss_policy_name[] = {
-[NWRITE_ALLOCATE] "Non Write Allocate",
-[WRITE_ALLOCATE]  "Write Allocate",
+static const char* wmiss_policy[] = {
+//[NWRITE_ALLOCATE] {.name = "Non Write Allocate", wmiss = nwrite_alloc},
+[WRITE_ALLOCATE]  {.name = "Write Allocate",     wmiss = write_alloc},
 };
 
 static struct {
+  int nway; 
+  int nset; 
+  int block_size;
+  int cache_size;
+
+  int block_width;
+  int index_width; 
+  int tag_width;
+
   int replace_policy; 
   int write_policy; 
   int wmiss_policy;
+
+  uint64_t hit;
+  uint64_t miss;
 } cache_obj;
 
-
-static uint32_t replace_policy(int policy, uint32_t index) {
-  int i;
-  switch (policy) {
-    default: i = rand() % nway;
-  }
-  return i;
-}
-
 static int access(uint32_t tag, uint32_t index) {
-  for (int i = 0; i < nway; i++)
+  for (int i = 0; i < cache_obj.nway; i++)
     if (cache[i][index].tag == tag && 
         test_bit(cache[i][index].status, CACHELINE_V)) {
-        hit++;
+        cache_obj.hit++;
         return i; // hit
     }
-  miss++;
+  cache_obj.miss++;
   return -1; // miss
 } 
 
@@ -97,7 +117,9 @@ static void write_dirty(uint32_t way, uint32_t index) {
   if (test_bit(cache[way][index].status, CACHELINE_V) && 
     test_bit(cache[way][index].status, CACHELINE_D)) {
     mem_write(blocknum, cache[way][index].data);
+#ifdef MTRACE
     MTRACE_WDIRTY(blocknum);
+#endif
   }
 }
 
@@ -125,7 +147,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
       ndata=odata = *word; 
 
     } else {
-      way = replace_policy(cache_obj.replace_policy, index);
+      way = replace_policy[cache_obj.replace_policy].replace(index);
 
       word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
       ostat = cache[way][index].status;
@@ -137,7 +159,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
         //printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
-      mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
+      mem_read((addr >> cache_obj.block_width), cache[way][index].data);
 
       cache[way][index].status = clear_stat(cache[way][index].status);
       cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
@@ -148,7 +170,9 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
       ndata = *word;
 
     }
+#ifdef
     MTRACE_R(addr, way, ostat, obase, offset, odata, nstat, nbase, ndata);
+#endif
 
   } else {
 
@@ -159,14 +183,14 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
     } else {
 
       if (cache_obj.wmiss_policy == WRITE_ALLOCATE) {
-        way = replace_policy(cache_obj.replace_policy, index);
+        way = replace_policy[cache_obj.replace_policy].replace(index);
 
         if (cache_obj.write_policy == WRITE_BACK) {
           write_dirty(way, index);
           //printf("<<<<<<<<<<<<<<<<<<<<write miss>>>>>>>>>\n");
         }
 
-        mem_read((addr >> BLOCK_WIDTH), cache[way][index].data);
+        mem_read((addr >> cache_obj.block_width), cache[way][index].data);
         cache[way][index].status = clear_stat(cache[way][index].status);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
         cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_D);
@@ -195,48 +219,51 @@ void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
 
 /* addr = | tag | index | block offset| */
 
+#define ADDR_LEN sizeof(uintptr_t) * 8
 void init_cache(int total_size_width, int associativity_width) {
 
   cache_obj.replace_policy = REPLACE_RAND;
   cache_obj.write_policy = WRITE_BACK;
   cache_obj.wmiss_policy = WRITE_ALLOCATE;
 
-  cache_size = exp2(total_size_width);
-  index_width = total_size_width - BLOCK_WIDTH - associativity_width;
-  assert(index_width >= 0);
+  cache_obj.block_width = BLOCK_WIDTH;
+  cache_obj.block_size  = BLOCK_SIZE;
+  cache_obj.cache_size = exp2(total_size_width);
+  cache_obj.index_width = total_size_width - cache_obj.block_width - associativity_width;
+  assert(cache_obj.index_width >= 0);
 
-  tag_width = sizeof(uintptr_t) * 8 - index_width - BLOCK_WIDTH;
-  assert(tag_width >= 0);
+  cache_obj.tag_width = ADDR_LEN - cache_obj.index_width - cache_obj.block_width;
+  assert(cache_obj.tag_width >= 0);
 
-  nway = exp2(associativity_width);
-  nset = exp2(index_width);
+  cache_obj.nway = exp2(associativity_width);
+  cache_obj.nset = exp2(cache_obj.index_width);
 
-  cache = malloc(nway * sizeof(struct cache_line*));
+  cache = malloc(cache_obj.nway * sizeof(struct cache_line*));
   assert(cache);
-  for (int i = 0; i < nway; i++) {
-    cache[i] = malloc(nset * sizeof(struct cache_line)); 
+  for (int i = 0; i < cache_obj.nway; i++) {
+    cache[i] = malloc(cache_obj.nset * sizeof(struct cache_line)); 
     assert(cache[i]);
-    memset(cache[i], 0, nset * sizeof(struct cache_line));
+    memset(cache[i], 0, cache_obj.nset * sizeof(struct cache_line));
   }
 }
 
 
 void display_statistic(void) {
-  uint64_t tot_access = hit + miss;
-  double hit_rate = (double)hit / tot_access;
+  uint64_t tot_access = cache_obj.hit + cache_obj.miss;
+  double hit_rate = (double)cache_obj.hit / tot_access;
   LOG("Cache Configuration:\n");
   LOG("Policies:\n");
-  LOG("\tReplacement Policy: %s\n", replace_policy_name[cache_obj.replace_policy]);
-  LOG("\tWrite Policy: %s\n", write_policy_name[cache_obj.write_policy]);
-  LOG("\tWrite Miss Policy: %s\n", wmiss_policy_name[cache_obj.wmiss_policy]);
-  LOG("Cache Size: %d\n", cache_size);
-  LOG("Block Size: %d\n", BLOCK_SIZE);
-  LOG("Set Number: %d\n", nset);
-  LOG("Associativity: %d\n", nway);
+  LOG("\tReplacement Policy: %s\n", replace_policy[cache_obj.replace_policy].name);
+  LOG("\tWrite Policy: %s\n", write_policy[cache_obj.write_policy].name);
+  LOG("\tWrite Miss Policy: %s\n", wmiss_policy[cache_obj.wmiss_policy].name);
+  LOG("Cache Size: %d\n", cache_obj.cache_size);
+  LOG("Block Size: %d\n", cache_obj.block_size);
+  LOG("Set Number: %d\n", cache_obj.nset);
+  LOG("Associativity: %d\n", cache_obj.nway);
   LOG("\n");
   LOG("Statistic:\n");
   LOG("Total Memory Access: %ld\n", tot_access);
-  LOG("Hit / Miss: %ld / %ld\n", hit, miss);
+  LOG("Hit / Miss: %ld / %ld\n", cache_obj.hit, cache_obj.miss);
   LOG("Hit Rate: %0.4lf%%\n", 100 * hit_rate);
   LOG("\n");
 /* hit div tot_access = 0 . h1 h2 h3 h4
@@ -250,8 +277,8 @@ void display_statistic(void) {
 }
 
 void free_cache(void) {
-  assert(nway > 0); // prevent free_cache() from being invoked before init_cache()
-  for (int i = 0; i < nway; i++)
+  assert(cache_obj.nway > 0); // prevent free_cache() from being invoked before init_cache()
+  for (int i = 0; i < cache_obj.nway; i++)
     free(cache[i]);
   free(cache);
 }
