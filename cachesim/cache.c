@@ -58,7 +58,7 @@ struct policy{
 }; 
 
 static uint32_t replace_rand(uint32_t index) {
-  return (rand() % cahce_obj.nway);
+  return (rand() % cache_obj.nway);
 }
 
 static uint32_t write_back() {
@@ -73,12 +73,12 @@ static struct policy replace_policy[] = {
 [REPLACE_RAND] {.name = "Random", .replace = replace_rand},
 };
 
-static const char* write_policy[] = {
+static struct policy write_policy[] = {
 //[WRITE_THROUGH] {.name = "Write Through", .write = write_through}, 
 [WRITE_BACK]    {.name = "Write Back",    .write = write_back   },
 };
 
-static const char* wmiss_policy[] = {
+static struct policy wmiss_policy[] = {
 //[NWRITE_ALLOCATE] {.name = "Non Write Allocate", wmiss = nwrite_alloc},
 [WRITE_ALLOCATE]  {.name = "Write Allocate",     wmiss = write_alloc},
 };
