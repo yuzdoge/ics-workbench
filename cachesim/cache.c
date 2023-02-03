@@ -97,7 +97,7 @@ static void write_dirty(uint32_t way, uint32_t index) {
   if (test_bit(cache[way][index].status, CACHELINE_V) && 
     test_bit(cache[way][index].status, CACHELINE_D)) {
     mem_write(blocknum, cache[way][index].data);
-    LOG("\t"MTRACE_WDIRTY_FMT, blocknum);
+    MTRACE_WDIRTY(blocknum);
   }
 }
 
