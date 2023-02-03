@@ -54,11 +54,11 @@ struct policy{
     uint32_t (*replace)(uint32_t index);
     uint32_t (*write)();
     uint32_t (*wmiss)();
-  }
+  };
 }; 
 
 static uint32_t replace_rand(uint32_t index) {
-  return (rand() % nway);
+  return (rand() % cahce_obj.nway);
 }
 
 static uint32_t write_back() {
