@@ -3,9 +3,11 @@
 
 #include "log.h"
 
-#define MTRACE_COMMON_FMT "ADDR=[%08lx], WDATA=[%04x], WMASK=[%04x]; " \
-"WAY=[%02d], OLD LINE:[STAT:%04x | BASE:%08lx | OFF:%04x]=[%04x] -> " \
-"NEW LINE:[STAT:%04x | BASE:%08lx | OFF:%04x]=[%04x]"
+#define ALEN_FMT
+#define DLEN_FMT
+#define MTRACE_COMMON_FMT "ADDR=[%08lx], WDATA=[%08x], WMASK=[%08x]; " \
+"WAY=[%02d], OLD LINE:[STAT:%08x | BASE:%08lx | OFF:%08x]=[%08x] -> " \
+"NEW LINE:[STAT:%08x | BASE:%08lx | OFF:%08x]=[%08x]"
 
 #define MTRACE_WDIRTY_FMT "Write dirty block back to Memory Address: %08lx"
 
