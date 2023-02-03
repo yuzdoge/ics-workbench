@@ -2,7 +2,7 @@
 #include <inttypes.h>
 #include <string.h> 
 #include "trace.h"
-#include "stat.h"
+#include "log.h"
 
 void mem_read(uintptr_t block_num, uint8_t *buf);
 void mem_write(uintptr_t block_num, const uint8_t *buf);
@@ -97,7 +97,7 @@ static void write_dirty(uint32_t way, uint32_t index) {
   if (test_bit(cache[way][index].status, CACHELINE_V) && 
     test_bit(cache[way][index].status, CACHELINE_D)) {
     mem_write(blocknum, cache[way][index].data);
-    //printf("write!!!\n");
+    LOG("\t"MTRACE_WDIRTY_FMT, blocknum);
   }
 }
 
