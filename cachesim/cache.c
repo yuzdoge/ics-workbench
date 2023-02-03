@@ -25,6 +25,26 @@ struct cache_line {
 
 static struct cache_line **cache;
 
+static struct {
+  int nway; 
+  int nset; 
+  int block_size;
+  int cache_size;
+
+  int block_width;
+  int index_width; 
+  int tag_width;
+
+  int replace_policy; 
+  int write_policy; 
+  int wmiss_policy;
+
+  uint64_t hit;
+  uint64_t miss;
+} cache_obj;
+
+
+
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
 #define set_stat(stat, flag) ((stat) | (flag)) 
 #define unset_stat(stat, flag) ((stat) & ~(flag))
@@ -79,27 +99,9 @@ static struct policy write_policy[] = {
 };
 
 static struct policy wmiss_policy[] = {
-//[NWRITE_ALLOCATE] {.name = "Non Write Allocate", wmiss = nwrite_alloc},
-[WRITE_ALLOCATE]  {.name = "Write Allocate",     wmiss = write_alloc},
+//[NWRITE_ALLOCATE] {.name = "Non Write Allocate", .wmiss = nwrite_alloc},
+[WRITE_ALLOCATE]  {.name = "Write Allocate",     .wmiss = write_alloc},
 };
-
-static struct {
-  int nway; 
-  int nset; 
-  int block_size;
-  int cache_size;
-
-  int block_width;
-  int index_width; 
-  int tag_width;
-
-  int replace_policy; 
-  int write_policy; 
-  int wmiss_policy;
-
-  uint64_t hit;
-  uint64_t miss;
-} cache_obj;
 
 static int access(uint32_t tag, uint32_t index) {
   for (int i = 0; i < cache_obj.nway; i++)
