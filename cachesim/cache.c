@@ -17,6 +17,28 @@ void cycle_increase(int n) { cycle_cnt += n; }
 #define CACHELINE_V 0x1 
 #define CACHELINE_D 0x2 
 
+#define test_bit(stat, flag) (((stat) & (flag)) != 0)
+#define set_stat(stat, flag) ((stat) | (flag)) 
+#define unset_stat(stat, flag) ((stat) & ~(flag))
+#define clear_stat(stat) 0
+
+#define get_tag(addr)   (((addr) >> (cache_obj.index_width + cache_obj.block_width)) & (exp2(cache_obj.tag_width) - 1)) 
+#define get_index(addr) (((addr) >> cache_obj.block_width) & (cache_obj.nset - 1))
+#define get_offset(addr) ((addr) & (cache_obj.block_size - 1))
+
+#define make_blocknum(tag, index) (((tag) << cache_obj.index_width) | index)
+
+// Replacement Policies
+#define REPLACE_RAND 0
+
+// Write Policies
+#define WRITE_THROUGH 0
+#define WRITE_BACK    1
+
+// Write miss Policies
+#define NWRITE_ALLOCATE 0
+#define WRITE_ALLOCATE  1
+
 struct cache_line {
   uint32_t status;
   uint32_t tag;
@@ -43,30 +65,6 @@ static struct {
   uint64_t miss;
 } cache_obj;
 
-
-
-#define test_bit(stat, flag) (((stat) & (flag)) != 0)
-#define set_stat(stat, flag) ((stat) | (flag)) 
-#define unset_stat(stat, flag) ((stat) & ~(flag))
-#define clear_stat(stat) 0
-
-
-#define get_tag(addr)   (((addr) >> (cache_obj.index_width + cache_obj.block_width)) & (exp2(cache_obj.tag_width) - 1)) 
-#define get_index(addr) (((addr) >> cache_obj.block_width) & (cache_obj.nset - 1))
-#define get_offset(addr) ((addr) & (cache_obj.block_size - 1))
-
-#define make_blocknum(tag, index) (((tag) << cache_obj.index_width) | index)
-
-// Replacement Policies
-#define REPLACE_RAND 0
-
-// Write Policies
-#define WRITE_THROUGH 0
-#define WRITE_BACK    1
-
-// Write miss Policies
-#define NWRITE_ALLOCATE 0
-#define WRITE_ALLOCATE  1
 
 struct policy{
   char *name;
@@ -114,15 +112,21 @@ static int access(uint32_t tag, uint32_t index) {
   return -1; // miss
 } 
 
-static void write_dirty(uint32_t way, uint32_t index) {
+static bool write_dirty(uint32_t way, uint32_t index) {
+
   uintptr_t blocknum = make_blocknum(cache[way][index].tag, index);
+
   if (test_bit(cache[way][index].status, CACHELINE_V) && 
     test_bit(cache[way][index].status, CACHELINE_D)) {
+
     mem_write(blocknum, cache[way][index].data);
+    return true;
 #ifdef MTRACE
     MTRACE_WDIRTY(blocknum);
 #endif
   }
+
+  return false; 
 }
 
 static uint32_t* cache_ctrl(int write, uintptr_t addr) {
@@ -163,7 +167,6 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
       if (cache_obj.write_policy == WRITE_BACK) {
         write_dirty(way, index);
-        //printf("<<<<<<<<<<<<<<<<<<<<read miss>>>>>>>>>\n");
       }
 
       mem_read((addr >> cache_obj.block_width), cache[way][index].data);
@@ -215,8 +218,63 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
 }
 
+static void exchange(uint32_t way, uint32_t index, uintptr_t addr) {
+
+  if (cache_obj.write_policy == WRITE_BACK) {
+      write_dirty(way, index);
+  }
+
+  mem_read((addr >> cache_obj.block_width), cache[way][index].data);
+
+  cache[way][index].status = clear_stat(cache[way][index].status);
+  cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
+  cache[way][index].tag = tag;
+}
+
 uint32_t cache_read(uintptr_t addr) {
-  uint32_t *word = cache_ctrl(0, addr);
+  assert(addr < MEM_SIZE);
+
+  //uint32_t *word = cache_ctrl(0, addr);
+
+  int way; 
+  uint32_t *word;
+  uint32_t tag = get_tag(addr); 
+  uint32_t index =  get_index(addr);
+  uint32_t offset = get_offset(addr);
+
+  way = access(tag, index);
+
+  if (way >= 0) { // hit
+#ifdef MTRACE
+    nstat=ostat = cache[way][index].status;
+    nbase=obase = make_blocknum(cache[way][index].tag, index); 
+    ndata=odata = *word; 
+#endif
+
+  } else {
+    way = replace_policy[cache_obj.replace_policy].replace(index);
+
+#ifdef MTRACE
+      word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+      ostat = cache[way][index].status;
+      obase = make_blocknum(cache[way][index].tag, index); 
+      odata = *word;
+#endif
+    exchange(way, index, addr);
+    
+#ifdef MTRACE
+      nstat = cache[way][index].status;
+      nbase = make_blocknum(cache[way][index].tag, index); 
+      ndata = *word;
+#endif
+
+  }
+#ifdef MTRACE
+    MTRACE_R(addr, way, ostat, obase, offset, odata, nstat, nbase, ndata);
+#endif
+
+
+  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
   return *word;
 }
 
