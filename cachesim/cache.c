@@ -111,13 +111,26 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   uint32_t index =  get_index(addr);
   uint32_t offset = get_offset(addr);
 
+  uint32_t odata, ndata, 
+  uint32_t ostat, nstat, 
+  uintptr_t obase, nbase;
+
   way = access(tag, index);
 
   if (!write) {
     if (way >= 0) {
+      word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+      nstat=ostat = cache[way][index].status;
+      nbase=obase = make_blocknum(cache[way][index].tag, index); 
+      ndata=odata = *word; 
 
     } else {
       way = replace_policy(cache_obj.replace_policy, index);
+
+      word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+      ostat = cache[way][index].status;
+      obase = make_blocknum(cache[way][index].tag, index); 
+      odata = *word;
 
       if (cache_obj.write_policy == WRITE_BACK) {
         write_dirty(way, index);
@@ -129,7 +142,14 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
       cache[way][index].status = clear_stat(cache[way][index].status);
       cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
       cache[way][index].tag = tag;
+
+      nstat = cache[way][index].status;
+      nbase = make_blocknum(cache[way][index].tag, index); 
+      ndata = *word;
+
     }
+    MTRACE_R(addr, way, ostat, obase, offset, odata, nstat, nbase, ndata);
+
   } else {
 
     if (way >= 0) {
