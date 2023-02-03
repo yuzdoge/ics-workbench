@@ -18,9 +18,9 @@ void cycle_increase(int n) { cycle_cnt += n; }
 #define CACHELINE_D 0x2 
 
 #define test_bit(stat, flag) (((stat) & (flag)) != 0)
-#define set_stat(stat, flag) ((stat) | (flag)) 
-#define unset_stat(stat, flag) ((stat) & ~(flag))
-#define clear_stat(stat) 0
+#define set_stat(stat, flag) (stat = (stat) | (flag)) 
+#define unset_stat(stat, flag) (stat = (stat) & ~(flag))
+#define clear_stat(stat) (stat = 0)
 
 #define get_tag(addr)   (((addr) >> (cache_obj.index_width + cache_obj.block_width)) & (exp2(cache_obj.tag_width) - 1)) 
 #define get_index(addr) (((addr) >> cache_obj.block_width) & (cache_obj.nset - 1))
@@ -69,9 +69,9 @@ static struct {
 struct policy{
   char *name;
   union {
-    uint32_t (*replace)(uint32_t index);
-    uint32_t (*write)();
-    uint32_t (*wmiss)();
+    uint32_t (*replace)(uint32_t);
+    uint32_t (*write)(uint32_t, uint32_t, uintptr_t, uint32_t, uint32_t);
+    uint32_t (*wmiss)(uint32_t, uint32_t, uint32_t, uintptr_t, uint32_t, uint32_t);
   };
 }; 
 
@@ -79,11 +79,52 @@ static uint32_t replace_rand(uint32_t index) {
   return (rand() % cache_obj.nway);
 }
 
-static uint32_t write_back() {
+static uint32_t write_back(uint32_t way, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
+  uint32_t *word 
+  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+  *word = (*word & ~wmask) | (data & wmask); 
+  set_stat(cache[way][index].status, CACHELINE_D);
   return 0;
 }
 
-static uint32_t write_alloc() {
+static bool write_dirty(uint32_t way, uint32_t index) {
+
+  uintptr_t blocknum = make_blocknum(cache[way][index].tag, index);
+
+  if (test_bit(cache[way][index].status, CACHELINE_V) && 
+    test_bit(cache[way][index].status, CACHELINE_D)) {
+
+    mem_write(blocknum, cache[way][index].data);
+    return true;
+#ifdef MTRACE
+    MTRACE_WDIRTY(blocknum);
+#endif
+  }
+
+  return false; 
+}
+
+
+static void exchange(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr) {
+
+  if (cache_obj.write_policy == WRITE_BACK) {
+      write_dirty(way, index);
+  }
+
+  mem_read((addr >> cache_obj.block_width), cache[way][index].data);
+
+  clear_stat(cache[way][index].status);
+  set_stat(cache[way][index].status, CACHELINE_V);
+  cache[way][index].tag = tag;
+}
+
+static uint32_t write_alloc(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
+  way = replace_policy[cache_obj.replace_policy].replace(index);
+
+  exchange(way, tag, index, addr);
+
+  write_policy[cache_obj.write_policy].write(way, index, addr, data, wmask);
+
   return 0;
 }
 
@@ -112,23 +153,7 @@ static int access(uint32_t tag, uint32_t index) {
   return -1; // miss
 } 
 
-static bool write_dirty(uint32_t way, uint32_t index) {
-
-  uintptr_t blocknum = make_blocknum(cache[way][index].tag, index);
-
-  if (test_bit(cache[way][index].status, CACHELINE_V) && 
-    test_bit(cache[way][index].status, CACHELINE_D)) {
-
-    mem_write(blocknum, cache[way][index].data);
-    return true;
-#ifdef MTRACE
-    MTRACE_WDIRTY(blocknum);
-#endif
-  }
-
-  return false; 
-}
-
+/*
 static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
   assert(addr < MEM_SIZE);
@@ -217,19 +242,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   return word;
 
 }
-
-static void exchange(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr) {
-
-  if (cache_obj.write_policy == WRITE_BACK) {
-      write_dirty(way, index);
-  }
-
-  mem_read((addr >> cache_obj.block_width), cache[way][index].data);
-
-  cache[way][index].status = clear_stat(cache[way][index].status);
-  cache[way][index].status = set_stat(cache[way][index].status, CACHELINE_V);
-  cache[way][index].tag = tag;
-}
+*/
 
 uint32_t cache_read(uintptr_t addr) {
   assert(addr < MEM_SIZE);
@@ -281,8 +294,23 @@ uint32_t cache_read(uintptr_t addr) {
 }
 
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
-  uint32_t *word = cache_ctrl(1, addr);
-  *word = (*word & ~wmask) | (data & wmask); 
+  assert(addr < MEM_SIZE);
+
+  //uint32_t *word = cache_ctrl(1, addr);
+  int way; 
+  uint32_t tag = get_tag(addr); 
+  uint32_t index =  get_index(addr);
+  uint32_t offset = get_offset(addr);
+
+  way = access(tag, index);
+  if (way >= 0) {
+
+    write_policy[cache_obj.write_policy].write(way, index, addr, data, wmask);
+
+  } else {
+    wmiss_policy[cache_obj.wmiss_policy].wmiss(way, tag, index, addr, data, wmask);
+  }
+  
 }
 
 /* addr = | tag | index | block offset| */
