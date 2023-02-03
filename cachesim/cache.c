@@ -172,7 +172,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
       ndata = *word;
 
     }
-#ifdef
+#ifdef MTRACE
     MTRACE_R(addr, way, ostat, obase, offset, odata, nstat, nbase, ndata);
 #endif
 
