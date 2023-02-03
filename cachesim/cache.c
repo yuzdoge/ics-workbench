@@ -75,22 +75,6 @@ struct policy{
   };
 }; 
 
-static uint32_t replace_rand(uint32_t index) {
-  return (rand() % cache_obj.nway);
-}
-
-static uint32_t write_back(uint32_t way, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
-
-  uint32_t *word;
-  uint32_t offset = get_offset(addr);
-
-  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
-  
-  *word = (*word & ~wmask) | (data & wmask); 
-  set_stat(cache[way][index].status, CACHELINE_D);
-  return 0;
-}
-
 static bool write_dirty(uint32_t way, uint32_t index) {
 
   uintptr_t blocknum = make_blocknum(cache[way][index].tag, index);
@@ -122,6 +106,36 @@ static void exchange(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr)
   cache[way][index].tag = tag;
 }
 
+
+static uint32_t replace_rand(uint32_t index) {
+  return (rand() % cache_obj.nway);
+}
+
+
+static struct policy replace_policy[] = {
+[REPLACE_RAND] {.name = "Random", .replace = replace_rand},
+};
+
+
+static uint32_t write_back(uint32_t way, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
+
+  uint32_t *word;
+  uint32_t offset = get_offset(addr);
+
+  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+  
+  *word = (*word & ~wmask) | (data & wmask); 
+  set_stat(cache[way][index].status, CACHELINE_D);
+  return 0;
+}
+
+
+static struct policy write_policy[] = {
+//[WRITE_THROUGH] {.name = "Write Through", .write = write_through}, 
+[WRITE_BACK]    {.name = "Write Back",    .write = write_back   },
+};
+
+
 static uint32_t write_alloc(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
   way = replace_policy[cache_obj.replace_policy].replace(index);
 
@@ -131,15 +145,6 @@ static uint32_t write_alloc(uint32_t way, uint32_t tag, uint32_t index, uintptr_
 
   return 0;
 }
-
-static struct policy replace_policy[] = {
-[REPLACE_RAND] {.name = "Random", .replace = replace_rand},
-};
-
-static struct policy write_policy[] = {
-//[WRITE_THROUGH] {.name = "Write Through", .write = write_through}, 
-[WRITE_BACK]    {.name = "Write Back",    .write = write_back   },
-};
 
 static struct policy wmiss_policy[] = {
 //[NWRITE_ALLOCATE] {.name = "Non Write Allocate", .wmiss = nwrite_alloc},
