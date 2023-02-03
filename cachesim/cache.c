@@ -218,7 +218,7 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
 
 }
 
-static void exchange(uint32_t way, uint32_t index, uintptr_t addr) {
+static void exchange(uint32_t way, uint32_t tag, uint32_t index, uintptr_t addr) {
 
   if (cache_obj.write_policy == WRITE_BACK) {
       write_dirty(way, index);
@@ -237,10 +237,11 @@ uint32_t cache_read(uintptr_t addr) {
   //uint32_t *word = cache_ctrl(0, addr);
 
   int way; 
-  uint32_t *word;
   uint32_t tag = get_tag(addr); 
   uint32_t index =  get_index(addr);
   uint32_t offset = get_offset(addr);
+
+  uint32_t *word;
 
   way = access(tag, index);
 
@@ -260,7 +261,8 @@ uint32_t cache_read(uintptr_t addr) {
       obase = make_blocknum(cache[way][index].tag, index); 
       odata = *word;
 #endif
-    exchange(way, index, addr);
+
+    exchange(way, tag, index, addr);
     
 #ifdef MTRACE
       nstat = cache[way][index].status;
