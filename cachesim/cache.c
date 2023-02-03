@@ -111,8 +111,8 @@ static uint32_t* cache_ctrl(int write, uintptr_t addr) {
   uint32_t index =  get_index(addr);
   uint32_t offset = get_offset(addr);
 
-  uint32_t odata, ndata, 
-  uint32_t ostat, nstat, 
+  uint32_t odata, ndata; 
+  uint32_t ostat, nstat; 
   uintptr_t obase, nbase;
 
   way = access(tag, index);
