@@ -80,8 +80,10 @@ static uint32_t replace_rand(uint32_t index) {
 }
 
 static uint32_t write_back(uint32_t way, uint32_t index, uintptr_t addr, uint32_t data, uint32_t wmask) {
-  uint32_t *word 
-  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+
+  uint32_t offset = get_offset(addr);
+  uint32_t *word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+  
   *word = (*word & ~wmask) | (data & wmask); 
   set_stat(cache[way][index].status, CACHELINE_D);
   return 0;
@@ -300,7 +302,6 @@ void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
   int way; 
   uint32_t tag = get_tag(addr); 
   uint32_t index =  get_index(addr);
-  uint32_t offset = get_offset(addr);
 
   way = access(tag, index);
   if (way >= 0) {
