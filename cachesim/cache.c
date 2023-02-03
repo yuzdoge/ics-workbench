@@ -51,9 +51,9 @@ static struct cache_line **cache;
 struct policy{
   char *name;
   union {
-    uint32_t *replace(uint32_t index);
-    uint32_t *write();
-    uint32_t *wmiss();
+    uint32_t (*replace)(uint32_t index);
+    uint32_t (*write)();
+    uint32_t (*wmiss)();
   }
 }; 
 
