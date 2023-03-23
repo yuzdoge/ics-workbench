@@ -188,18 +188,18 @@ uint32_t cache_read(uintptr_t addr) {
     way = replace_policy[cache_obj.replace_policy].replace(index);
 
 #ifdef MTRACE
-      word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
-      ostat = cache[way][index].status;
-      obase = make_blocknum(cache[way][index].tag, index); 
-      odata = *word;
+    word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+    ostat = cache[way][index].status;
+    obase = make_blocknum(cache[way][index].tag, index); 
+    odata = *word;
 #endif
 
     exchange(way, tag, index, addr);
     
 #ifdef MTRACE
-      nstat = cache[way][index].status;
-      nbase = make_blocknum(cache[way][index].tag, index); 
-      ndata = *word;
+    nstat = cache[way][index].status;
+    nbase = make_blocknum(cache[way][index].tag, index); 
+    ndata = *word;
 #endif
 
   }
