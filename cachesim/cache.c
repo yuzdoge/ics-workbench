@@ -167,7 +167,6 @@ static int access(uint32_t tag, uint32_t index) {
 uint32_t cache_read(uintptr_t addr) {
   assert(addr < MEM_SIZE);
 
-
   int way; 
   uint32_t tag = get_tag(addr); 
   uint32_t index =  get_index(addr);
@@ -186,6 +185,7 @@ uint32_t cache_read(uintptr_t addr) {
 
   if (way >= 0) { // hit
 #ifdef MTRACE
+    word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
     nstat=ostat = cache[way][index].status;
     nbase=obase = make_blocknum(cache[way][index].tag, index); 
     ndata=odata = *word; 
@@ -214,8 +214,7 @@ uint32_t cache_read(uintptr_t addr) {
     MTRACE_R(addr, way, ostat, obase, offset, odata, nstat, nbase, ndata);
 #endif
 
-
-  word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
+    word = (void *)cache[way][index].data + (offset & ~(sizeof(*word) - 1));
   return *word;
 }
 
