@@ -84,10 +84,11 @@ static bool write_dirty(uint32_t way, uint32_t index) {
     test_bit(cache[way][index].status, CACHELINE_D)) {
 
     mem_write(blocknum, cache[way][index].data);
-    return true;
 #ifdef MTRACE
     MTRACE_WDIRTY(blocknum);
 #endif
+    return true;
+
   }
 
   return false; 
