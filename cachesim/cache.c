@@ -4,7 +4,7 @@
 #include "trace.h"
 #include "log.h"
 
-//#define MTRACE
+#define MTRACE
 void mem_read(uintptr_t block_num, uint8_t *buf);
 void mem_write(uintptr_t block_num, const uint8_t *buf);
 
@@ -84,13 +84,11 @@ static bool write_dirty(uint32_t way, uint32_t index) {
     test_bit(cache[way][index].status, CACHELINE_D)) {
 
     mem_write(blocknum, cache[way][index].data);
-    printf("yes\n");
     return true;
 #ifdef MTRACE
     MTRACE_WDIRTY(blocknum);
 #endif
   }
-  printf("no\n");
 
   return false; 
 }
