@@ -167,7 +167,6 @@ static int access(uint32_t tag, uint32_t index) {
 uint32_t cache_read(uintptr_t addr) {
   assert(addr < MEM_SIZE);
 
-  //uint32_t *word = cache_ctrl(0, addr);
 
   int way; 
   uint32_t tag = get_tag(addr); 
@@ -177,6 +176,13 @@ uint32_t cache_read(uintptr_t addr) {
   uint32_t *word;
 
   way = access(tag, index);
+
+#ifdef MTRACE
+  // n means new, o means old
+  uint32_t nstat, ostat;
+  uint32_t nbase, obase;
+  uint32_t ndata, odata;
+#endif
 
   if (way >= 0) { // hit
 #ifdef MTRACE
@@ -216,7 +222,6 @@ uint32_t cache_read(uintptr_t addr) {
 void cache_write(uintptr_t addr, uint32_t data, uint32_t wmask) {
   assert(addr < MEM_SIZE);
 
-  //uint32_t *word = cache_ctrl(1, addr);
   int way; 
   uint32_t tag = get_tag(addr); 
   uint32_t index =  get_index(addr);
