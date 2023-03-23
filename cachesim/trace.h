@@ -11,7 +11,7 @@
 
 #define MTRACE_WDIRTY_FMT "Write dirty block back to Memory Address: %08lx"
 
-#define MTRACE_WDIRTY(blknum) LOG("\n"MTRACE_WDIRTY_FMT"----V\n", blknum);
+#define MTRACE_WDIRTY(blknum) LOG("\n"MTRACE_WDIRTY_FMT"----The related operation are on the next line\n", blknum);
 
 #define MTRACE_R(addr, way, ostat, obase, off, odata, nstat, nbase, ndata) \
 LOG("RW=[R], "MTRACE_COMMON_FMT"\n", addr, 0, 0, way, ostat, obase, off, odata, nstat, nbase, off, ndata)

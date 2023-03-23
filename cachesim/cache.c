@@ -4,7 +4,7 @@
 #include "trace.h"
 #include "log.h"
 
-#define MTRACE
+//#define MTRACE
 void mem_read(uintptr_t block_num, uint8_t *buf);
 void mem_write(uintptr_t block_num, const uint8_t *buf);
 
