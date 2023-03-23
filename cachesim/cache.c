@@ -179,7 +179,7 @@ uint32_t cache_read(uintptr_t addr) {
 #ifdef MTRACE
   // n means new, o means old
   uint32_t nstat, ostat;
-  uint32_t nbase, obase;
+  uintptr_t nbase, obase;
   uint32_t ndata, odata;
 #endif
 
